@@ -1,13 +1,11 @@
 // app/(auth)/forgot-password/page.tsx
 
-// app/(auth)/forgot-password/page.tsx
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client"; // Import de l'instance
 
 export default function ForgotPasswordPage() {
-  const supabase = createClient();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client"; //  Import de l'instance
 
 type BookingRow = {
   id: string;
@@ -33,7 +33,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminBookingsPage() {
-  const supabase = createClient();
+  // ❌ Supprimé : const supabase = createClient();
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");

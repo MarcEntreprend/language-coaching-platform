@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { addDays, startOfDay } from "date-fns";
-import { supabase } from "@/lib/supabase/client"; // ✅ import direct de l'instance
+import { supabase } from "@/lib/supabase/client"; //  import direct de l'instance
 import { formatSlotInTimezone } from "@/lib/utils/availability";
 
 type Slot = { startUtc: string; endUtc: string };
@@ -53,7 +53,7 @@ export default function BookSessionPage() {
 
     const {
       data: { user },
-    } = await supabase.auth.getUser(); // ✅ supabase est disponible
+    } = await supabase.auth.getUser(); //  supabase est disponible
 
     if (!user) {
       setError("Tu dois être connecté pour réserver.");

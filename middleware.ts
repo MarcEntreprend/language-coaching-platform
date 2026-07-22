@@ -1,6 +1,4 @@
 // middleware.ts
-
-// middleware.ts
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -25,7 +23,10 @@ function isRateLimited(
 }
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({ request });
+  //  Correction: Créer la réponse APRÈS avoir configuré les cookies
+  let response = NextResponse.next({
+    request: request,
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,12 +37,9 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
         },
       },
     },

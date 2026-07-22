@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client"; //  Import de l'instance
 
 type AvailabilityRule = {
   id: string;
@@ -24,7 +24,7 @@ const DAYS = [
 ];
 
 export default function AdminAvailabilityPage() {
-  const supabase = createClient();
+  // ❌ Supprimé : const supabase = createClient();
   const [rules, setRules] = useState<AvailabilityRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -1,10 +1,11 @@
-// Liste des étudiants
 // app/(admin)/admin/students/page.tsx
+
+// Liste des étudiants
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client"; //  Import de l'instance
 
 type Student = {
   id: string;
@@ -16,7 +17,7 @@ type Student = {
 };
 
 export default function AdminStudentsPage() {
-  const supabase = createClient();
+  // ❌ Supprimé : const supabase = createClient();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
