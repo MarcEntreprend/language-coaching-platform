@@ -1,6 +1,7 @@
 // app/api/bookings/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { stripe } from "@/lib/stripe/server";
 import { computeAvailableSlots } from "@/lib/utils/availability";
 
 export async function POST(request: NextRequest) {
@@ -26,7 +27,6 @@ export async function POST(request: NextRequest) {
   }
 
   // 1. Re-vérifier côté serveur que le créneau est bien encore disponible
-  //    (protection contre une réservation concurrente / manipulation client)
   const { data: availabilityRules } = await supabase
     .from("coach_availability")
     .select("day_of_week, start_time, end_time, timezone")
@@ -68,14 +68,26 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 2. Valider le code promo côté serveur uniquement (jamais faire confiance au client
-  //    pour le prix final — recalcul obligatoire pour éviter la triche)
-  let priceCents = 0; // TODO Phase 3 : remplacer par le prix de base configurable en admin
-  const BASE_PRICE_CENTS = 3000; // 30 USD par session — placeholder ajustable en admin (Phase 3)
-  priceCents = BASE_PRICE_CENTS;
+  // 2. Charger le prix de base depuis store_settings (jamais en dur)
+  const { data: settings, error: settingsError } = await supabase
+    .from("store_settings")
+    .select("base_session_price_cents, currency")
+    .eq("id", 1)
+    .single();
 
+  if (settingsError || !settings) {
+    return NextResponse.json(
+      { error: "Configuration de prix introuvable." },
+      { status: 500 },
+    );
+  }
+
+  const basePriceCents = settings.base_session_price_cents;
+  const currency = settings.currency.toLowerCase();
+  let priceCents = basePriceCents;
   let promoCodeId: string | null = null;
 
+  // 3. Valider le code promo côté serveur uniquement
   if (promoCode) {
     const { data: promo, error: promoError } = await supabase
       .from("promo_codes")
@@ -109,44 +121,91 @@ export async function POST(request: NextRequest) {
       priceCents = 0;
     } else if (promo.discount_type === "percentage") {
       priceCents = Math.round(
-        BASE_PRICE_CENTS * (1 - promo.discount_value / 100),
+        basePriceCents * (1 - promo.discount_value / 100),
       );
     } else if (promo.discount_type === "fixed") {
       priceCents = Math.max(
         0,
-        BASE_PRICE_CENTS - Math.round(promo.discount_value * 100),
+        basePriceCents - Math.round(promo.discount_value * 100),
       );
     }
 
     promoCodeId = promo.id;
   }
 
-  // 3. Créer la réservation
+  // 4. Créer la réservation — 'confirmed' si gratuite, 'pending' en attente de paiement Stripe
   const { data: booking, error: insertError } = await supabase
     .from("bookings")
     .insert({
       student_id: user.id,
       session_start: sessionStart,
       session_end: sessionEnd,
-      status: priceCents === 0 ? "confirmed" : "pending", // 'pending' en attente du paiement Stripe (Phase 3)
+      status: priceCents === 0 ? "confirmed" : "pending",
       promo_code_id: promoCodeId,
       price_paid_cents: priceCents,
-      currency: "USD",
+      currency: settings.currency,
     })
     .select()
     .single();
 
-  if (insertError) {
+  if (insertError || !booking) {
     return NextResponse.json(
       { error: "Erreur lors de la création de la réservation." },
       { status: 500 },
     );
   }
 
-  // 4. Incrémenter l'usage du code promo si utilisé
+  // 5. Incrémenter l'usage du code promo si utilisé
   if (promoCodeId) {
     await supabase.rpc("increment_promo_usage", { promo_id: promoCodeId });
   }
 
-  return NextResponse.json({ booking }, { status: 201 });
+  // 6. Session gratuite : pas de Stripe, on renvoie directement
+  if (priceCents === 0) {
+    return NextResponse.json({ booking, checkoutUrl: null }, { status: 201 });
+  }
+
+  // 7. Session payante : créer une Stripe Checkout Session
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin;
+
+  try {
+    const checkoutSession = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: user.email ?? undefined,
+      line_items: [
+        {
+          price_data: {
+            currency,
+            unit_amount: priceCents,
+            product_data: {
+              name: "Session de coaching anglais (60 min)",
+              description: new Date(sessionStart).toLocaleString(),
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        bookingId: booking.id,
+      },
+      success_url: `${siteUrl}/dashboard/book/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/dashboard/book?cancelled=1`,
+    });
+
+    return NextResponse.json(
+      { booking, checkoutUrl: checkoutSession.url },
+      { status: 201 },
+    );
+  } catch (stripeError) {
+    // La réservation existe déjà en 'pending' — on ne la supprime pas, l'étudiant peut réessayer
+    // le paiement plus tard. Documenté : un job de nettoyage des 'pending' non payées après
+    // 24h pourrait être ajouté en cron (Phase rappels email).
+    return NextResponse.json(
+      {
+        error:
+          "Erreur lors de la création du paiement. Réessaie ou contacte le support.",
+      },
+      { status: 500 },
+    );
+  }
 }
