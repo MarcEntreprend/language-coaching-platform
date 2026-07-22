@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase/client"; // Import direct de l'instance
 
 export default function LoginPage() {
   const router = useRouter();
-  // ❌ Supprimez : const supabase = createClient();
+  //  Supprimez : const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
