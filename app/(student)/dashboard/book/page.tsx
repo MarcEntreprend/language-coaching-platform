@@ -142,9 +142,9 @@ export default function BookSessionPage() {
                 {day}
               </h2>
               <div className="flex flex-wrap gap-2">
-                {daySlots.map((slot) => (
+                {daySlots.map((slot, index) => (
                   <button
-                    key={slot.startUtc}
+                    key={`${slot.startUtc}-${index}`}
                     onClick={() => setSelectedSlot(slot)}
                     className={`text-sm px-3 py-2 rounded-lg border transition-colors ${
                       selectedSlot?.startUtc === slot.startUtc

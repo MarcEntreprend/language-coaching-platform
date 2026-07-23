@@ -97,6 +97,17 @@ export function computeAvailableSlots(
     cursorDay = addDays(cursorDay, 1);
   }
 
+  const uniqueSlots = new Map<string, TimeSlot>();
+  for (const slot of slots) {
+    const key = slot.startUtc;
+    if (!uniqueSlots.has(key)) {
+      uniqueSlots.set(key, slot);
+    }
+  }
+  return Array.from(uniqueSlots.values()).sort((a, b) =>
+    a.startUtc.localeCompare(b.startUtc),
+  );
+
   return slots.sort((a, b) => a.startUtc.localeCompare(b.startUtc));
 }
 
