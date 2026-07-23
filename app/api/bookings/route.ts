@@ -1,8 +1,10 @@
 // app/api/bookings/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe/server";
 import { computeAvailableSlots } from "@/lib/utils/availability";
+import { sendBookingConfirmationEmail } from "@/lib/email/booking-emails";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -25,6 +27,12 @@ export async function POST(request: NextRequest) {
   if (!sessionStart || !sessionEnd) {
     return NextResponse.json({ error: "Créneau requis." }, { status: 400 });
   }
+
+  const { data: studentProfile } = await supabase
+    .from("profiles")
+    .select("full_name, timezone")
+    .eq("id", user.id)
+    .single();
 
   // 1. Re-vérifier côté serveur que le créneau est bien encore disponible
   const { data: availabilityRules } = await supabase
@@ -160,8 +168,21 @@ export async function POST(request: NextRequest) {
     await supabase.rpc("increment_promo_usage", { promo_id: promoCodeId });
   }
 
-  // 6. Session gratuite : pas de Stripe, on renvoie directement
+  // 6. Session gratuite : pas de Stripe, confirmée immédiatement + email direct
   if (priceCents === 0) {
+    if (user.email) {
+      try {
+        await sendBookingConfirmationEmail({
+          to: user.email,
+          studentName: studentProfile?.full_name ?? "",
+          sessionStartUtc: sessionStart,
+          timezone: studentProfile?.timezone ?? "UTC",
+        });
+      } catch {
+        // Un échec d'envoi ne doit pas faire échouer la réservation elle-même.
+      }
+    }
+
     return NextResponse.json({ booking, checkoutUrl: null }, { status: 201 });
   }
 
@@ -197,9 +218,6 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (stripeError) {
-    // La réservation existe déjà en 'pending' — on ne la supprime pas, l'étudiant peut réessayer
-    // le paiement plus tard. Documenté : un job de nettoyage des 'pending' non payées après
-    // 24h pourrait être ajouté en cron (Phase rappels email).
     return NextResponse.json(
       {
         error:

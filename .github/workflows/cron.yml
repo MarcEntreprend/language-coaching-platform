@@ -1,0 +1,27 @@
+name: Cron Jobs
+
+on:
+  schedule:
+    - cron: "0 * * * *" # Toutes les heures - rappels email
+    - cron: "*/30 * * * *" # Toutes les 30 min - nettoyage pending
+
+jobs:
+  trigger-reminders:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 * * * *'
+    steps:
+      - name: Appel des rappels email 24h
+        run: |
+          curl -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://ton-site.com/api/cron/session-reminders
+
+  trigger-cleanup:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '*/30 * * * *'
+    steps:
+      - name: Appel du nettoyage pending
+        run: |
+          curl -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://ton-site.com/api/cron/cleanup-pending-bookings

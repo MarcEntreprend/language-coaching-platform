@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { stripe } from "@/lib/stripe/server";
 import { supabaseServiceRole } from "@/lib/supabase/service-role";
+import { sendBookingConfirmationEmail } from "@/lib/email/booking-emails";
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, status: booking.status });
     }
 
-    // ✅ Mettre à jour le statut en 'confirmed'
+    // Mettre à jour le statut en 'confirmed'
     const { error: bookingUpdateError } = await supabaseServiceRole
       .from("bookings")
       .update({
@@ -143,6 +144,34 @@ export async function POST(request: NextRequest) {
       // On log uniquement
     } else {
       console.log(`Webhook: Paiement enregistré pour booking ${bookingId}`);
+    }
+
+    // === EMAIL DE CONFIRMATION ===
+    // Un échec d'envoi ne doit jamais faire échouer le webhook.
+    const { data: bookingWithProfile } = await supabaseServiceRole
+      .from("bookings")
+      .select("session_start, profiles(full_name, email, timezone)")
+      .eq("id", bookingId)
+      .single();
+
+    const profile = bookingWithProfile?.profiles as any;
+    if (profile?.email) {
+      try {
+        await sendBookingConfirmationEmail({
+          to: profile.email,
+          studentName: profile.full_name ?? "",
+          sessionStartUtc: bookingWithProfile!.session_start,
+          timezone: profile.timezone ?? "UTC",
+        });
+        console.log(`Webhook: Email de confirmation envoyé à ${profile.email}`);
+      } catch (error) {
+        // Volontairement silencieux – l'email peut échouer sans compromettre le paiement.
+        console.error("Webhook: Échec envoi email de confirmation", error);
+      }
+    } else {
+      console.warn(
+        `Webhook: Aucun email trouvé pour booking ${bookingId}, email non envoyé.`,
+      );
     }
 
     return NextResponse.json({
