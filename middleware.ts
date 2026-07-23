@@ -23,7 +23,6 @@ function isRateLimited(
 }
 
 export async function middleware(request: NextRequest) {
-  //  Correction: Créer la réponse APRÈS avoir configuré les cookies
   let response = NextResponse.next({
     request: request,
   });
@@ -49,10 +48,10 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Rate limiting sur login et booking
   const path = request.nextUrl.pathname;
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
 
+  // Rate limiting
   if (path.startsWith("/api/auth/login")) {
     if (isRateLimited(`login:${ip}`, 5, 60_000)) {
       return NextResponse.json(
@@ -71,7 +70,25 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protection routes admin
+  if (path.startsWith("/api/messages")) {
+    if (isRateLimited(`messages:${ip}`, 30, 60_000)) {
+      return NextResponse.json(
+        { error: "Trop de messages envoyés, ralentis un peu." },
+        { status: 429 },
+      );
+    }
+  }
+
+  if (path.startsWith("/api/blog/comments")) {
+    if (isRateLimited(`comments:${ip}`, 5, 60_000)) {
+      return NextResponse.json(
+        { error: "Trop de commentaires envoyés, réessaie plus tard." },
+        { status: 429 },
+      );
+    }
+  }
+
+  // Protection admin
   if (path.startsWith("/admin")) {
     if (!user) {
       return NextResponse.redirect(new URL("/login", request.url));
@@ -86,7 +103,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protection routes student
+  // Protection student
   if (path.startsWith("/dashboard") && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
@@ -100,5 +117,7 @@ export const config = {
     "/admin/:path*",
     "/api/auth/:path*",
     "/api/bookings/:path*",
+    "/api/messages/:path*",
+    "/api/blog/comments/:path*",
   ],
 };

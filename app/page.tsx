@@ -1,11 +1,34 @@
 // app/page.tsx
 
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+import type { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
+import HomeNav from "@/components/HomeNav";
+
+export const metadata: Metadata = {
+  title: "Speak with Marc — Coaching d'anglais 1-on-1",
+  description:
+    "Sessions individuelles de coaching d'anglais parlé pour adultes. Réserve ta session découverte.",
+  openGraph: {
+    title: "Speak with Marc — Coaching d'anglais 1-on-1",
+    description:
+      "Sessions individuelles de coaching d'anglais parlé pour adultes.",
+    type: "website",
+  },
+};
+
+const courseJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Course",
+  name: "Coaching d'anglais parlé individuel",
+  description:
+    "Sessions individuelles de coaching conversationnel en anglais, pour tous niveaux (A1 à C2).",
+  provider: {
+    "@type": "Organization",
+    name: "Speak with Marc",
+    sameAs: process.env.NEXT_PUBLIC_SITE_URL,
+  },
+};
 
 const STATS = [
   { value: "500+", label: "Sessions données" },
@@ -53,78 +76,12 @@ const TESTIMONIALS = [
   },
 ];
 
-const courseJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Course",
-  name: "Coaching d'anglais parlé individuel",
-  description:
-    "Sessions individuelles de coaching conversationnel en anglais, pour tous niveaux (A1 à C2).",
-  provider: {
-    "@type": "Organization",
-    name: "Speak with Marc",
-    sameAs: process.env.NEXT_PUBLIC_SITE_URL,
-  },
-};
-
 export default function HomePage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    async function checkAuth() {
-      const { data } = await supabase.auth.getUser();
-      setIsLoggedIn(!!data.user);
-    }
-    checkAuth();
-  }, []);
-
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <JsonLd data={courseJsonLd} />
 
-      {/* NAV */}
-      <nav className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <Link href="/" className="text-lg font-semibold text-slate-900">
-            Speak with Marc
-          </Link>
-          <div className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
-            <a href="#comment-ca-marche" className="hover:text-slate-900">
-              Comment ça marche
-            </a>
-            <a href="#avis" className="hover:text-slate-900">
-              Avis
-            </a>
-            <Link href="/blog" className="hover:text-slate-900">
-              Blog
-            </Link>
-          </div>
-          <div className="flex items-center gap-3">
-            {isLoggedIn ? (
-              <Link
-                href="/dashboard"
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-sm font-medium text-slate-600 hover:text-slate-900"
-                >
-                  Connexion
-                </Link>
-                <Link
-                  href="/register"
-                  className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
-                >
-                  Commencer
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
+      <HomeNav />
 
       {/* HERO */}
       <section className="mx-auto max-w-3xl px-4 py-20 text-center">
@@ -143,6 +100,7 @@ export default function HomePage() {
           >
             Réserver un appel découverte
           </Link>
+          {/*  */}
           <a
             href="#comment-ca-marche"
             className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:border-slate-900 transition-colors"

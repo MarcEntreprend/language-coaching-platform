@@ -7,6 +7,7 @@ import { marked } from "marked";
 import { supabasePublic } from "@/lib/supabase/public";
 import { deriveMetaDescription } from "@/lib/utils/blog";
 import JsonLd from "@/components/JsonLd";
+import CommentForm from "@/components/CommentForm";
 
 export const revalidate = 3600;
 
@@ -18,6 +19,16 @@ async function getPost(slug: string) {
     .eq("is_published", true)
     .single();
   return data;
+}
+
+async function getApprovedComments(postId: string) {
+  const { data } = await supabasePublic
+    .from("blog_comments")
+    .select("id, author_name, body, created_at")
+    .eq("post_id", postId)
+    .eq("is_approved", true)
+    .order("created_at", { ascending: true });
+  return data ?? [];
 }
 
 export async function generateStaticParams() {
@@ -75,6 +86,7 @@ export default async function BlogPostPage({
   const post = await getPost(slug);
 
   if (!post) notFound();
+  const comments = await getApprovedComments(post.id);
 
   const contentHtml = marked.parse(post.content, { async: false }) as string;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -142,6 +154,48 @@ export default async function BlogPostPage({
           className="prose prose-slate mt-8 max-w-none prose-headings:font-semibold prose-a:text-slate-900"
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
+
+        <div className="mt-16 border-t border-slate-200 pt-10">
+          <h2 className="text-lg font-semibold text-slate-900">
+            {comments.length > 0
+              ? `${comments.length} commentaire${comments.length > 1 ? "s" : ""}`
+              : "Commentaires"}
+          </h2>
+
+          <div className="mt-6 space-y-5">
+            {comments.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                Sois le premier à commenter.
+              </p>
+            ) : (
+              comments.map((c) => (
+                <div
+                  key={c.id}
+                  className="rounded-xl border border-slate-200 bg-white p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-slate-900">
+                      {c.author_name}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(c.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-600 whitespace-pre-wrap">
+                    {c.body}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="mt-8">
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">
+              Laisser un commentaire
+            </h3>
+            <CommentForm postId={post.id} />
+          </div>
+        </div>
       </article>
     </main>
   );
