@@ -2,11 +2,26 @@
 
 ```
 english-coaching-platform/
+├── .github/
+│   └── workflows/
+│       └── cron.yml
+├── .next/                          # (généré par Next.js)
 ├── app/
 │   ├── (admin)/
 │   │   ├── admin/
 │   │   │   ├── availability/
 │   │   │   │   └── page.tsx
+│   │   │   ├── blog/
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── edit/
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── categories/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── new/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── DeletePostButton.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── TogglePublishButton.tsx
 │   │   │   ├── bookings/
 │   │   │   │   ├── [id]/
 │   │   │   │   │   ├── BookingStatusActions.tsx
@@ -31,6 +46,8 @@ english-coaching-platform/
 │   │   │   ├── check-email/
 │   │   │   │   └── page.tsx
 │   │   │   └── page.tsx
+│   │   ├── reset-password/
+│   │   │   └── page.tsx
 │   │   └── layout.tsx
 │   ├── (student)/
 │   │   ├── dashboard/
@@ -43,6 +60,11 @@ english-coaching-platform/
 │   │   └── layout.tsx
 │   ├── api/
 │   │   ├── admin/
+│   │   │   ├── blog/
+│   │   │   │   ├── posts/
+│   │   │   │   │   ├── [id]/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
 │   │   │   ├── bookings/
 │   │   │   │   ├── [id]/
 │   │   │   │   │   ├── notes/
@@ -64,27 +86,52 @@ english-coaching-platform/
 │   │   │   ├── status-by-session/
 │   │   │   │   └── route.ts
 │   │   │   └── route.ts
-│   │   ├── stripe/
-│   │   │   └── webhook/
+│   │   ├── cron/
+│   │   │   ├── cleanup-pending-bookings/
+│   │   │   │   └── route.ts
+│   │   │   └── session-reminders/
 │   │   │       └── route.ts
-│   │   └── auth/
-│   │       └── callback/
+│   │   └── stripe/
+│   │       └── webhook/
 │   │           └── route.ts
+│   ├── auth/
+│   │   └── callback/
+│   │       └── route.ts
+│   ├── blog/
+│   │   ├── [slug]/
+│   │   │   └── page.tsx
+│   │   ├── category/
+│   │   │   └── [slug]/
+│   │   │       └── page.tsx
+│   │   └── page.tsx
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── page.tsx
+│   ├── page.tsx
+│   ├── robots.ts
+│   └── sitemap.ts
 ├── components/
+│   ├── admin/
+│   │   └── BlogPostForm.tsx
+│   ├── JsonLd.tsx
 │   └── LogoutButton.tsx
 ├── lib/
+│   ├── email/
+│   │   ├── booking-emails.ts
+│   │   ├── resend.ts
+│   │   └── templates.ts
 │   ├── stripe/
 │   │   └── server.ts
 │   ├── supabase/
 │   │   ├── admin-guard.ts
 │   │   ├── client.ts
+│   │   ├── public.ts
 │   │   ├── server.ts
 │   │   └── service-role.ts
 │   └── utils/
-│       └── availability.ts
+│       ├── availability.ts
+│       ├── blog.ts
+│       ├── lib/
+│       └── slugify.ts
 ├── public/
 │   ├── android-chrome-192x192.png
 │   ├── android-chrome-512x512.png
@@ -95,9 +142,12 @@ english-coaching-platform/
 ├── supabase/
 │   ├── migrations/
 │   │   ├── 0003_store_settings.sql
+│   │   ├── 0004_reminders_and_promo_decrement.sql
+│   │   ├── 0005_blog_updated_at.sql
 │   │   └── Migration-SQL.sql
 │   └── seeds/
 │       └── 0001_dev_promo_codes.sql
+├── .env.local
 ├── .gitignore
 ├── globals.d.ts
 ├── middleware.ts
@@ -107,7 +157,8 @@ english-coaching-platform/
 ├── postcss.config.js
 ├── README.md
 ├── tailwind.config.js
-└── tsconfig.json
+├── tsconfig.json
+└── vercel.json
 ```
 
 ---
