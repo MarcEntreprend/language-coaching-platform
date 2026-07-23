@@ -2,12 +2,22 @@
 
 import "./globals.css";
 import { Inter } from "next/font/google";
+import type { Metadata } from "next";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
-  title: "English Coaching",
-  description: "Améliorez votre anglais parlé",
+export const metadata: Metadata = {
+  title: "Speak with Marc - English Coaching",
+  description:
+    "Améliore ton anglais parlé avec des sessions 1-on-1 personnalisées.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({

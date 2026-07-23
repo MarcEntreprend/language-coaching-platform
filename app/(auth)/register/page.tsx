@@ -3,12 +3,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client"; //  Import direct de l'instance
+import { supabase } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
-  // ❌ Supprimez : const supabase = createClient();
-
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +16,7 @@ export default function RegisterPage() {
   const [englishLevel, setEnglishLevel] = useState("B1");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,7 +38,14 @@ export default function RegisterPage() {
     });
 
     if (signUpError) {
-      setError(signUpError.message);
+      // Message plus clair pour rate limit
+      if (signUpError.message.includes("rate limit")) {
+        setError(
+          "Trop de tentatives. Attends 1 heure ou utilise un autre email.",
+        );
+      } else {
+        setError(signUpError.message);
+      }
       setLoading(false);
       return;
     }
@@ -62,7 +68,34 @@ export default function RegisterPage() {
     }
 
     setLoading(false);
-    router.push("/register/check-email");
+    setEmailSent(true);
+  }
+
+  // Si l'email a été envoyé, afficher un message de confirmation
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center space-y-4">
+          <div className="text-4xl">📧</div>
+          <h2 className="text-xl font-semibold text-slate-900">
+            Vérifie ta boîte mail
+          </h2>
+          <p className="text-sm text-slate-500">
+            Nous venons d'envoyer un lien de confirmation à <br />
+            <span className="font-medium text-slate-900">{email}</span>
+          </p>
+          <p className="text-xs text-slate-400">
+            Clique sur le lien pour activer ton compte.
+          </p>
+          <a
+            href="/login"
+            className="inline-block mt-4 text-sm text-slate-900 font-medium hover:underline"
+          >
+            Retour à la connexion
+          </a>
+        </div>
+      </div>
+    );
   }
 
   return (
