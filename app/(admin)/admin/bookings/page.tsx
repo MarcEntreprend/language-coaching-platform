@@ -33,7 +33,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminBookingsPage() {
-  // ❌ Supprimé : const supabase = createClient();
+  
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");

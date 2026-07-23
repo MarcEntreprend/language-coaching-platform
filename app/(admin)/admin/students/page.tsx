@@ -17,7 +17,6 @@ type Student = {
 };
 
 export default function AdminStudentsPage() {
-  // ❌ Supprimé : const supabase = createClient();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

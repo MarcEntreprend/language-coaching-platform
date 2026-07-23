@@ -24,7 +24,7 @@ const DAYS = [
 ];
 
 export default function AdminAvailabilityPage() {
-  // ❌ Supprimé : const supabase = createClient();
+
   const [rules, setRules] = useState<AvailabilityRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
