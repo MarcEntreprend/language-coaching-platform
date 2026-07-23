@@ -5,7 +5,7 @@ english-coaching-platform/
 ├── .github/
 │   └── workflows/
 │       └── cron.yml
-├── .next/                          # (généré par Next.js)
+├── .next/
 ├── app/
 │   ├── (admin)/
 │   │   ├── admin/
@@ -17,6 +17,9 @@ english-coaching-platform/
 │   │   │   │   │       └── page.tsx
 │   │   │   │   ├── categories/
 │   │   │   │   │   └── page.tsx
+│   │   │   │   ├── comments/
+│   │   │   │   │   ├── CommentModerationRow.tsx
+│   │   │   │   │   └── page.tsx
 │   │   │   │   ├── new/
 │   │   │   │   │   └── page.tsx
 │   │   │   │   ├── DeletePostButton.tsx
@@ -25,8 +28,13 @@ english-coaching-platform/
 │   │   │   ├── bookings/
 │   │   │   │   ├── [id]/
 │   │   │   │   │   ├── BookingStatusActions.tsx
-│   │   │   │   │   ├── page.tsx
-│   │   │   │   │   └── SessionNotesEditor.tsx
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── messages/
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── deleted-[studentId]/
+│   │   │   │   │   └── deleted-page.tsx
 │   │   │   │   └── page.tsx
 │   │   │   ├── settings/
 │   │   │   │   └── page.tsx
@@ -56,21 +64,23 @@ english-coaching-platform/
 │   │   │   │   │   ├── page.tsx
 │   │   │   │   │   └── SuccessContent.tsx
 │   │   │   │   └── page.tsx
+│   │   │   ├── messages/
+│   │   │   │   └── page.tsx
 │   │   │   └── page.tsx
 │   │   └── layout.tsx
 │   ├── api/
 │   │   ├── admin/
 │   │   │   ├── blog/
-│   │   │   │   ├── posts/
-│   │   │   │   │   ├── [id]/
-│   │   │   │   │   │   └── route.ts
-│   │   │   │   │   └── route.ts
-│   │   │   ├── bookings/
-│   │   │   │   ├── [id]/
-│   │   │   │   │   ├── notes/
-│   │   │   │   │   │   └── route.ts
-│   │   │   │   │   └── status/
+│   │   │   │   ├── comments/
+│   │   │   │   │   └── [id]/
 │   │   │   │   │       └── route.ts
+│   │   │   │   └── posts/
+│   │   │   ├── bookings/
+│   │   │   │   └── [id]/
+│   │   │   │       ├── notes/
+│   │   │   │       │   └── route.ts
+│   │   │   │       └── status/
+│   │   │   │           └── route.ts
 │   │   │   ├── settings/
 │   │   │   │   └── route.ts
 │   │   │   └── students/
@@ -79,6 +89,9 @@ english-coaching-platform/
 │   │   │               └── route.ts
 │   │   ├── availability/
 │   │   │   └── route.ts
+│   │   ├── blog/
+│   │   │   └── comments/
+│   │   │       └── route.ts
 │   │   ├── bookings/
 │   │   │   ├── [id]/
 │   │   │   │   └── cancel/
@@ -91,6 +104,10 @@ english-coaching-platform/
 │   │   │   │   └── route.ts
 │   │   │   └── session-reminders/
 │   │   │       └── route.ts
+│   │   ├── messages/
+│   │   │   ├── mark-read/
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
 │   │   └── stripe/
 │   │       └── webhook/
 │   │           └── route.ts
@@ -112,8 +129,12 @@ english-coaching-platform/
 ├── components/
 │   ├── admin/
 │   │   └── BlogPostForm.tsx
+│   ├── CommentForm.tsx
+│   ├── HomeNav.tsx
 │   ├── JsonLd.tsx
-│   └── LogoutButton.tsx
+│   ├── LogoutButton.tsx
+│   ├── MessageThread.tsx
+│   └── OrganizationJsonLd.tsx
 ├── lib/
 │   ├── email/
 │   │   ├── booking-emails.ts
@@ -131,7 +152,9 @@ english-coaching-platform/
 │       ├── availability.ts
 │       ├── blog.ts
 │       ├── lib/
+│       ├── messaging.ts
 │       └── slugify.ts
+├── node_modules/
 ├── public/
 │   ├── android-chrome-192x192.png
 │   ├── android-chrome-512x512.png
@@ -144,6 +167,8 @@ english-coaching-platform/
 │   │   ├── 0003_store_settings.sql
 │   │   ├── 0004_reminders_and_promo_decrement.sql
 │   │   ├── 0005_blog_updated_at.sql
+│   │   ├── 0006_messaging.sql
+│   │   ├── 0007_blog_comments.sql
 │   │   └── Migration-SQL.sql
 │   └── seeds/
 │       └── 0001_dev_promo_codes.sql
