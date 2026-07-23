@@ -25,6 +25,12 @@ export default function AdminLayout({
               Réservations
             </Link>
             <Link
+              href="/admin/blog"
+              className="text-slate-600 hover:text-slate-900"
+            >
+              Blog
+            </Link>
+            <Link
               href="/admin/students"
               className="text-slate-600 hover:text-slate-900"
             >

@@ -1,9 +1,11 @@
 // app/page.tsx
+
 "use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import JsonLd from "@/components/JsonLd";
 
 const STATS = [
   { value: "500+", label: "Sessions données" },
@@ -51,6 +53,19 @@ const TESTIMONIALS = [
   },
 ];
 
+const courseJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Course",
+  name: "Coaching d'anglais parlé individuel",
+  description:
+    "Sessions individuelles de coaching conversationnel en anglais, pour tous niveaux (A1 à C2).",
+  provider: {
+    "@type": "Organization",
+    name: "Speak with Marc",
+    sameAs: process.env.NEXT_PUBLIC_SITE_URL,
+  },
+};
+
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -64,6 +79,8 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
+      <JsonLd data={courseJsonLd} />
+
       {/* NAV */}
       <nav className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
